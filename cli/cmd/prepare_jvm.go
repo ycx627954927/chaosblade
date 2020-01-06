@@ -51,16 +51,19 @@ func (pc *PrepareJvmCommand) prepareJvm() error {
 		return spec.ReturnFail(spec.Code[spec.IllegalParameters],
 			fmt.Sprintf("less --process or --pid flags"))
 	}
+
 	pid, response := jvm.CheckFlagValues(pc.processName, pc.processId)
 	if !response.Success {
 		return response
 	}
+
 	pc.processId = pid
 	record, err := GetDS().QueryRunningPreByTypeAndProcess(PrepareJvmType, pc.processName, pc.processId)
 	if err != nil {
 		return spec.ReturnFail(spec.Code[spec.DatabaseError],
 			fmt.Sprintf("query attach java process record err, %s", err.Error()))
 	}
+
 	if record == nil {
 		var port string
 		if pc.port != 0 {
@@ -86,6 +89,7 @@ func (pc *PrepareJvmCommand) prepareJvm() error {
 					"please append or modify the --port %s argument in prepare command for retry", record.Port))
 		}
 	}
+
 	response, username := jvm.Attach(record.Port, pc.javaHome, pc.processId)
 	if !response.Success && username != "" && strings.Contains(response.Err, "connection refused") {
 		// if attach failed, search port from ~/.sandbox.token
@@ -102,10 +106,12 @@ func (pc *PrepareJvmCommand) prepareJvm() error {
 			}
 		}
 	}
+
 	if record.Pid != pc.processId {
 		// update pid
 		updatePreparationPid(record.Uid, pc.processId)
 	}
+
 	return handlePrepareResponse(record.Uid, pc.command, response)
 }
 

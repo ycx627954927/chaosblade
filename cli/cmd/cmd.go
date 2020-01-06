@@ -5,8 +5,10 @@ func CmdInit() *baseCommand {
 	baseCmd := &baseCommand{
 		command: cli.rootCmd,
 	}
+
 	// add version command
 	baseCmd.AddCommand(&VersionCommand{})
+
 	// add prepare command
 	prepareCommand := &PrepareCommand{}
 	baseCmd.AddCommand(prepareCommand)

@@ -180,6 +180,7 @@ func CheckFlagValues(processName, processId string) (string, *spec.Response) {
 				fmt.Sprintf("the %s process id doesn't exist.", processId))
 		}
 	}
+
 	if processName != "" {
 		ctx := context.WithValue(context.Background(), specchannel.ProcessKey, "java")
 		pids, err := specchannel.GetPidsByProcessName(processName, ctx)
@@ -214,5 +215,6 @@ func CheckFlagValues(processName, processId string) (string, *spec.Response) {
 			}
 		}
 	}
+
 	return processId, spec.ReturnSuccess("success")
 }
