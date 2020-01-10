@@ -46,16 +46,20 @@ func (ssc *StartServerCommand) run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return spec.ReturnFail(spec.Code[spec.ServerError], err.Error())
 	}
+
 	if len(pids) > 0 {
 		return spec.ReturnFail(spec.Code[spec.DuplicateError], "the chaosblade has been started. If you want to stop it, you can execute blade server stop command")
 	}
+
 	if ssc.nohup {
 		ssc.start0()
 	}
+
 	err = ssc.start()
 	if err != nil {
 		return err
 	}
+
 	cmd.Println(fmt.Sprintf("success, listening on %s:%s", ssc.ip, ssc.port))
 	return nil
 }
@@ -69,31 +73,39 @@ func (ssc *StartServerCommand) start() error {
 	if ssc.ip != "" {
 		args = fmt.Sprintf("%s --ip %s", args, ssc.ip)
 	}
+
 	response := cl.Run(context.TODO(), "nohup", fmt.Sprintf("%s > /dev/null 2>&1 &", args))
 	if !response.Success {
 		return response
 	}
+
 	time.Sleep(time.Second)
+
 	// check process
 	pids, err := channel.GetPidsByProcessName(startServerKey, context.TODO())
 	if err != nil {
 		return spec.ReturnFail(spec.Code[spec.ServerError], err.Error())
 	}
+
 	if len(pids) == 0 {
 		// read logs
 		logFile, err := util.GetLogFile(util.Blade)
 		if err != nil {
 			return spec.ReturnFail(spec.Code[spec.ServerError], "start blade server failed and can't get log file")
 		}
+
 		if !util.IsExist(logFile) {
 			return spec.ReturnFail(spec.Code[spec.ServerError], "start blade server failed and log file does not exist")
 		}
+
 		response := cl.Run(context.TODO(), "tail", fmt.Sprintf("-1 %s", logFile))
 		if !response.Success {
 			return spec.ReturnFail(spec.Code[spec.ServerError], "start blade server failed and can't read log file")
 		}
+
 		return spec.ReturnFail(spec.Code[spec.ServerError], response.Result.(string))
 	}
+
 	logrus.Infof("start blade server success, listen on %s:%s", ssc.ip, ssc.port)
 	return nil
 }
@@ -126,6 +138,7 @@ func Register(requestPath string) {
 				spec.ReturnFail(spec.Code[spec.IllegalParameters], "illegal cmd parameter").Print())
 			return
 		}
+
 		ctx := context.WithValue(context.Background(), "mode", "server")
 		response := channel.NewLocalChannel().Run(ctx, path.Join(util.GetProgramPath(), "blade"), cmds[0])
 		if response.Success {

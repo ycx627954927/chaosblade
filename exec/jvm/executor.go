@@ -187,9 +187,11 @@ func CheckFlagValues(processName, processId string) (string, *spec.Response) {
 		if err != nil {
 			return processId, spec.ReturnFail(spec.Code[spec.GetProcessError], err.Error())
 		}
+
 		if pids == nil || len(pids) == 0 {
 			return processId, spec.ReturnFail(spec.Code[spec.GetProcessError], "process not found")
 		}
+
 		if len(pids) == 1 {
 			if processId == "" {
 				processId = pids[0]

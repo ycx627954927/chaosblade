@@ -32,15 +32,18 @@ func (ssc *StopServerCommand) run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return spec.ReturnFail(spec.Code[spec.ServerError], err.Error())
 	}
+
 	if pids == nil || len(pids) == 0 {
 		logrus.Infof("the blade server process not found, so return success for stop operation")
 		cmd.Printf(spec.ReturnSuccess("success").Print())
 		return nil
 	}
+
 	response := channel.NewLocalChannel().Run(context.TODO(), "kill", fmt.Sprintf("-9 %s", strings.Join(pids, " ")))
 	if !response.Success {
 		return response
 	}
+
 	response.Result = fmt.Sprintf("pid is %s", strings.Join(pids, " "))
 	cmd.Printf(response.Print())
 	return nil

@@ -55,6 +55,7 @@ func (sc *StatusCommand) runStatus(command *cobra.Command, args []string) error 
 	} else {
 		uid = sc.uid
 	}
+
 	var result interface{}
 	var err error
 	switch sc.commandType {
@@ -74,17 +75,21 @@ func (sc *StatusCommand) runStatus(command *cobra.Command, args []string) error 
 		if uid == "" {
 			return spec.ReturnFail(spec.Code[spec.IllegalCommand], "must specify the right type or uid")
 		}
+
 		result, err = GetDS().QueryExperimentModelByUid(uid)
 		if util.IsNil(result) || err != nil {
 			result, err = GetDS().QueryPreparationByUid(uid)
 		}
 	}
+
 	if err != nil {
 		return spec.ReturnFail(spec.Code[spec.DatabaseError], err.Error())
 	}
+
 	if util.IsNil(result) {
 		return spec.Return(spec.Code[spec.DataNotFound])
 	}
+
 	response := spec.ReturnSuccess(result)
 
 	if terminal.IsTerminal(int(os.Stdout.Fd())) {
@@ -96,6 +101,7 @@ func (sc *StatusCommand) runStatus(command *cobra.Command, args []string) error 
 	} else {
 		sc.command.Println(response.Print())
 	}
+
 	return nil
 }
 

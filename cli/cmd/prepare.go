@@ -73,10 +73,12 @@ func handlePrepareResponse(uid string, cmd *cobra.Command, response *spec.Respon
 		GetDS().UpdatePreparationRecordByUid(uid, Error, response.Err)
 		return response
 	}
+
 	err := GetDS().UpdatePreparationRecordByUid(uid, Running, "")
 	if err != nil {
 		logrus.Warningf("update preparation record error: %s", err.Error())
 	}
+
 	response.Result = uid
 	cmd.Println(response.Print())
 	return nil

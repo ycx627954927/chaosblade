@@ -24,18 +24,22 @@ func Prepare(port, scriptLocation string, waitTime int, javaHome string) *spec.R
 	if scriptLocation == "" {
 		scriptLocation = scriptDefaultPath + "/"
 	}
+
 	response := preCheck(port, scriptLocation)
 	if !response.Success {
 		return response
 	}
+
 	javaBin, err := getJavaBin(javaHome)
 	if err != nil {
 		return spec.ReturnFail(spec.Code[spec.FileNotFound], err.Error())
 	}
+
 	response = startProxy(port, scriptLocation, javaBin)
 	if !response.Success {
 		return response
 	}
+
 	// wait seconds
 	time.Sleep(time.Duration(waitTime) * time.Second)
 	return postCheck(port)
@@ -68,22 +72,26 @@ func preCheck(port, scriptLocation string) *spec.Response {
 	if processExists(port) {
 		return spec.ReturnFail(spec.Code[spec.DuplicateError], "the server proxy has been started")
 	}
+
 	// check chaosblade-exec-cplus.jar file exists or not
 	if !util.IsExist(cplusJarPath) {
 		return spec.ReturnFail(spec.Code[spec.FileNotFound],
 			fmt.Sprintf("the %s proxy jar file not found in %s dir", ApplicationName, util.GetLibHome()))
 	}
+
 	// check script file
 	if !util.IsExist(scriptLocation) {
 		return spec.ReturnFail(spec.Code[spec.FileNotFound],
 			fmt.Sprintf("the %s script file dir not found", scriptLocation))
 	}
+
 	// check the port has been used or not
 	portInUse := util.CheckPortInUse(port)
 	if portInUse {
 		return spec.ReturnFail(spec.Code[spec.IllegalParameters],
 			fmt.Sprintf("the %s port is in use", port))
 	}
+
 	return spec.ReturnSuccess("success")
 }
 

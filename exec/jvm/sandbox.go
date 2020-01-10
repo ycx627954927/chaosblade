@@ -28,12 +28,15 @@ func Attach(port string, javaHome string, pid string) (*spec.Response, string) {
 	if !response.Success {
 		return response, username
 	}
+
 	time.Sleep(5 * time.Second)
+
 	// active
 	response = active(port)
 	if !response.Success {
 		return response, username
 	}
+
 	// check
 	return check(port), username
 }
@@ -45,9 +48,11 @@ func check(port string) *spec.Response {
 	if code == 200 {
 		return spec.ReturnSuccess(result)
 	}
+
 	if err != nil {
 		return spec.ReturnFail(spec.Code[spec.SandboxInvokeError], err.Error())
 	}
+
 	return spec.ReturnFail(spec.Code[spec.SandboxInvokeError],
 		fmt.Sprintf("response code is %d, result: %s", code, result))
 }
@@ -59,10 +64,12 @@ func active(port string) *spec.Response {
 	if err != nil {
 		return spec.ReturnFail(spec.Code[spec.SandboxInvokeError], err.Error())
 	}
+
 	if code != 200 {
 		return spec.ReturnFail(spec.Code[spec.SandboxInvokeError],
 			fmt.Sprintf("active module response code: %d, result: %s", code, result))
 	}
+
 	return spec.ReturnSuccess("success")
 }
 
@@ -73,6 +80,7 @@ func attach(pid, port string, ctx context.Context, javaHome string) (*spec.Respo
 		return spec.ReturnFail(spec.Code[spec.StatusError],
 			fmt.Sprintf("get username failed by %s pid, %v", pid, err)), ""
 	}
+
 	javaBin, javaHome := getJavaBinAndJavaHome(javaHome, ctx, pid)
 	toolsJar := getToolJar(javaHome)
 	token, err := getSandboxToken(ctx)
@@ -80,6 +88,7 @@ func attach(pid, port string, ctx context.Context, javaHome string) (*spec.Respo
 		return spec.ReturnFail(spec.Code[spec.ServerError],
 			fmt.Sprintf("create sandbox token failed, %v", err)), username
 	}
+
 	javaArgs := getAttachJvmOpts(toolsJar, token, port, pid)
 	currUser, err := osuser.Current()
 	if err != nil {
@@ -95,23 +104,29 @@ func attach(pid, port string, ctx context.Context, javaHome string) (*spec.Respo
 		}
 		response = channel.Run(ctx, "sudo", fmt.Sprintf("-u %s %s %s", username, javaBin, javaArgs))
 	}
+
 	if !response.Success {
 		return response, username
 	}
+
 	response = channel.Run(ctx, "grep", fmt.Sprintf(`%s %s | grep %s | tail -1 | awk -F ";" '{print $3";"$4}'`,
 		token, getSandboxTokenFile(username), DefaultNamespace))
+
 	// if attach successfully, the sandbox-agent.jar will write token to local file
 	if !response.Success {
 		return spec.ReturnFail(spec.Code[spec.SandboxInvokeError],
 			fmt.Sprintf("attach JVM %s failed, loss response; %s", pid, response.Err)), username
 	}
+
 	return response, username
 }
 
+// port: 指定sandbox 使用的端口
 func getAttachJvmOpts(toolsJar string, token string, port string, pid string) string {
 	jvmOpts := fmt.Sprintf("-Xms128M -Xmx128M -Xnoclassgc -ea -Xbootclasspath/a:%s", toolsJar)
 	sandboxHome := path.Join(util.GetLibHome(), "sandbox")
 	sandboxLibPath := path.Join(sandboxHome, "lib")
+
 	sandboxAttachArgs := fmt.Sprintf("home=%s;token=%s;server.ip=%s;server.port=%s;namespace=%s",
 		sandboxHome, token, "127.0.0.1", port, DefaultNamespace)
 	javaArgs := fmt.Sprintf(`%s -jar %s/sandbox-core.jar %s "%s/sandbox-agent.jar" "%s"`,
@@ -156,6 +171,7 @@ func getJavaBinAndJavaHome(javaHome string, ctx context.Context, pid string) (st
 		javaHome = os.Getenv("JAVA_HOME")
 		javaBin = path.Join(javaHome, "bin/java")
 	}
+
 	if javaHome == "" {
 		psArgs := specchannel.GetPsArgs()
 		response := channel.Run(ctx, "ps", fmt.Sprintf(`%s | grep -w %s | grep java | grep -v grep | awk '{print $4}'`,
@@ -163,10 +179,12 @@ func getJavaBinAndJavaHome(javaHome string, ctx context.Context, pid string) (st
 		if response.Success {
 			javaBin = strings.TrimSpace(response.Result.(string))
 		}
+
 		if strings.HasPrefix(javaBin, "/bin/java") {
 			javaHome = javaBin[:len(javaBin)-9]
 		}
 	}
+
 	return javaBin, javaHome
 }
 
@@ -180,6 +198,7 @@ func CheckPortFromSandboxToken(username string) (port string, err error) {
 	if err != nil {
 		return port, err
 	}
+
 	versionUrl := getSandboxUrl(port, "sandbox-info/version", "")
 	_, err, _ = util.Curl(versionUrl)
 	if err != nil {
@@ -195,17 +214,21 @@ func getPortFromSandboxToken(username string) (port string, err error) {
 	if !response.Success {
 		return "", fmt.Errorf(response.Err)
 	}
+
 	if response.Result == nil {
 		return "", fmt.Errorf("get empty from sandbox token file")
 	}
+
 	port = strings.TrimSpace(response.Result.(string))
 	if port == "" {
 		return "", fmt.Errorf("read empty from sandbox token file")
 	}
+
 	_, err = strconv.Atoi(port)
 	if err != nil {
 		return "", fmt.Errorf("can not find port from sandbox token file, %v", err)
 	}
+
 	return port, nil
 }
 
@@ -216,6 +239,7 @@ func shutdown(port string) *spec.Response {
 	if err != nil {
 		return spec.ReturnFail(spec.Code[spec.SandboxInvokeError], err.Error())
 	}
+
 	if code != 200 {
 		return spec.ReturnFail(spec.Code[spec.SandboxInvokeError],
 			fmt.Sprintf("shutdown module response code: %d, result: %s", code, result))

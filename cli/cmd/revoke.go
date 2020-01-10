@@ -38,14 +38,17 @@ func (rc *RevokeCommand) runRevoke(args []string) error {
 		return spec.ReturnFail(spec.Code[spec.DatabaseError],
 			fmt.Sprintf("query record err, %s", err.Error()))
 	}
+
 	if record == nil {
 		return spec.ReturnFail(spec.Code[spec.DataNotFound],
 			fmt.Sprintf("the uid record not found"))
 	}
+
 	if record.Status == Revoked {
 		rc.command.Println(spec.ReturnSuccess("success").Print())
 		return nil
 	}
+
 	var response *spec.Response
 	var channel = channel.NewLocalChannel()
 	switch record.ProgramType {
@@ -60,6 +63,7 @@ func (rc *RevokeCommand) runRevoke(args []string) error {
 		return spec.ReturnFail(spec.Code[spec.IllegalParameters],
 			fmt.Sprintf("not support the %s type", record.ProgramType))
 	}
+
 	if response.Success {
 		checkError(GetDS().UpdatePreparationRecordByUid(uid, Revoked, ""))
 	} else if strings.Contains(response.Err, "connection refused") {
@@ -71,6 +75,7 @@ func (rc *RevokeCommand) runRevoke(args []string) error {
 		checkError(GetDS().UpdatePreparationRecordByUid(uid, record.Status, fmt.Sprintf("revoke failed. %s", response.Err)))
 		return response
 	}
+
 	rc.command.Println(response.Print())
 	return nil
 }

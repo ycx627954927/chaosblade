@@ -47,6 +47,7 @@ func (pc *PrepareCPlusCommand) prepareCPlus() error {
 		return spec.ReturnFail(spec.Code[spec.DatabaseError],
 			fmt.Sprintf("query cplus agent server port record err, %s", err.Error()))
 	}
+
 	if record == nil || record.Status != Running {
 		record, err = insertPrepareRecord(PrepareCPlusType, portStr, portStr, "")
 		if err != nil {
@@ -54,6 +55,7 @@ func (pc *PrepareCPlusCommand) prepareCPlus() error {
 				fmt.Sprintf("insert prepare record err, %s", err.Error()))
 		}
 	}
+
 	response := cplus.Prepare(portStr, pc.scriptLocation, pc.waitTime, pc.javaHome)
 	return handlePrepareResponse(record.Uid, pc.command, response)
 }
